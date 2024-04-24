@@ -1,23 +1,23 @@
-package hook // import "m7s.live/plugin/hook/v4"
+package hook // import "github.com/zls3434/m7s-plugin-hook/v4"
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/zls3434/m7s-engine/v4"
 	"net/http"
 	"strings"
 	"time"
 
-	. "m7s.live/engine/v4"
-	"m7s.live/engine/v4/log"
-	"m7s.live/engine/v4/util"
+	"github.com/zls3434/m7s-engine/v4/log"
+	"github.com/zls3434/m7s-engine/v4/util"
 )
 
 type HookData struct {
-	*Stream `json:"stream"`
-	Extra   map[string]any `json:"extra"`
-	Event   string         `json:"event"` //事件名称
-	Time    int64          `json:"time"`  //调用时间
+	*engine.Stream `json:"stream"`
+	Extra          map[string]any `json:"extra"`
+	Event          string         `json:"event"` //事件名称
+	Time           int64          `json:"time"`  //调用时间
 }
 
 type HookAddr struct {
@@ -36,11 +36,11 @@ type HookConfig struct {
 	requestList map[string]*HookAddr
 }
 
-var HookPlugin = InstallPlugin(&HookConfig{})
+var HookPlugin = engine.InstallPlugin(&HookConfig{})
 
 func (h *HookConfig) OnEvent(event any) {
 	switch v := event.(type) {
-	case FirstConfig:
+	case engine.FirstConfig:
 		h.requestList = make(map[string]*HookAddr)
 		for k, v := range h.RequestList {
 			switch u := v.(type) {
@@ -105,13 +105,13 @@ func (h *HookConfig) OnEvent(event any) {
 				}
 			}(heartreq...)
 		}
-	case SEpublish:
+	case engine.SEpublish:
 		h.request(&HookData{Event: "publish", Stream: v.Target})
-	case SEclose:
+	case engine.SEclose:
 		h.request(&HookData{Event: "streamClose", Stream: v.Target})
-	case ISubscriber:
+	case engine.ISubscriber:
 		h.request(&HookData{Event: "subscribe", Stream: v.GetSubscriber().Stream, Extra: map[string]any{"subscriber": v}})
-	case UnsubscribeEvent:
+	case engine.UnsubscribeEvent:
 		h.request(&HookData{Event: "unsubscribe", Stream: v.Target.GetSubscriber().Stream, Extra: map[string]any{"subscriber": v.Target}})
 	}
 }
